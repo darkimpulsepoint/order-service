@@ -2,9 +2,6 @@ package by.darkimpulsepoint.orderservice.dto;
 
 import java.time.LocalDate;
 
-/**
- * User data received from user-service.
- */
 public record UserInfo(
         Long id,
         String name,

@@ -14,9 +14,7 @@ public final class OrderSpecifications {
     private OrderSpecifications() {
     }
 
-    /**
-     * Every argument is optional: a missing bound or an empty status list does not filter.
-     */
+
     public static Specification<Order> byFilter(Instant createdFrom, Instant createdTo, Collection<OrderStatus> statuses) {
         return createdFrom(createdFrom)
                 .and(createdTo(createdTo))

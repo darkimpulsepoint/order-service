@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Entity
 @Table(name = "orders")
-// soft-deleted orders are invisible to every query of this entity
 @SQLRestriction("deleted = false")
 public class Order extends AbstractEntity {
 
@@ -41,17 +40,11 @@ public class Order extends AbstractEntity {
     @Column(nullable = false)
     private boolean deleted;
 
-    // lines are saved, updated and removed together with the order
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
-    /**
-     * Makes the order contain exactly the given items. Existing lines are updated in place instead of
-     * being recreated, because Hibernate flushes inserts before deletes and a re-added item would break
-     * the (order_id, item_id) unique constraint.
-     */
+
     public void setItemQuantities(Map<Item, Integer> quantities) {
-        // compared by id: a line may hold a lazy proxy of the same item
         Set<Long> itemIds = quantities.keySet().stream().map(Item::getId).collect(Collectors.toSet());
         items.removeIf(line -> !itemIds.contains(line.getItem().getId()));
         quantities.forEach((item, quantity) -> items.stream()
