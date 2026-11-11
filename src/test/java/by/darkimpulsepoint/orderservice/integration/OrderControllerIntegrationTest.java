@@ -84,6 +84,20 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void createOrder_whenUserServiceForbidsLookup_returns403() {
+        USER_SERVICE.stubFor(get(urlPathEqualTo(USERS + "/by-email"))
+                .withQueryParam("email", equalTo("stranger@mail.com"))
+                .willReturn(aResponse().withStatus(403)));
+
+        ResponseEntity<ApiError> response = admin.post().uri(ORDERS)
+                .body(new CreateOrderRequest("stranger@mail.com", List.of(new OrderItemRequest(phoneId, 1))))
+                .retrieve().toEntity(ApiError.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(orderRepository.count()).isZero();
+    }
+
+    @Test
     void createOrder_withUnknownItem_returns404() {
         ResponseEntity<ApiError> response = admin.post().uri(ORDERS)
                 .body(new CreateOrderRequest(IVAN_EMAIL, List.of(new OrderItemRequest(999L, 1))))
