@@ -61,7 +61,9 @@ class ItemServiceTest {
     void create_whenNameExists_throwsDuplicate() {
         when(itemRepository.existsByName("Phone")).thenReturn(true);
 
-        assertThatThrownBy(() -> itemService.create(request("Phone", "1.00")))
+        ItemDto request = request("Phone", "1.00");
+
+        assertThatThrownBy(() -> itemService.create(request))
                 .isInstanceOf(DuplicateEntityException.class)
                 .hasMessageContaining("Phone");
         verify(itemRepository, never()).save(any());
@@ -113,7 +115,9 @@ class ItemServiceTest {
         when(itemRepository.findById(ITEM_ID)).thenReturn(Optional.of(item("Phone", "10.00")));
         when(itemRepository.existsByNameAndIdNot("Tablet", ITEM_ID)).thenReturn(true);
 
-        assertThatThrownBy(() -> itemService.update(ITEM_ID, request("Tablet", "20.00")))
+        ItemDto request = request("Tablet", "20.00");
+
+        assertThatThrownBy(() -> itemService.update(ITEM_ID, request))
                 .isInstanceOf(DuplicateEntityException.class);
         verify(itemRepository, never()).saveAndFlush(any());
     }
@@ -122,7 +126,9 @@ class ItemServiceTest {
     void update_whenMissing_throwsNotFound() {
         when(itemRepository.findById(ITEM_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> itemService.update(ITEM_ID, request("Tablet", "20.00")))
+        ItemDto request = request("Tablet", "20.00");
+
+        assertThatThrownBy(() -> itemService.update(ITEM_ID, request))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 

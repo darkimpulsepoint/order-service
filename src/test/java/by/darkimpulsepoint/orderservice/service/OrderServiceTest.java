@@ -117,8 +117,10 @@ class OrderServiceTest {
         when(accessChecker.isAdminOrOwner(USER_ID)).thenReturn(true);
         when(itemRepository.findAllById(anyIterable())).thenReturn(List.of(phone));
 
-        assertThatThrownBy(() -> orderService.create(new CreateOrderRequest(EMAIL, List.of(
-                new OrderItemRequest(1L, 1), new OrderItemRequest(99L, 1)))))
+        CreateOrderRequest request = new CreateOrderRequest(EMAIL, List.of(
+                new OrderItemRequest(1L, 1), new OrderItemRequest(99L, 1)));
+
+        assertThatThrownBy(() -> orderService.create(request))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("99");
         verify(orderRepository, never()).save(any());
@@ -129,7 +131,9 @@ class OrderServiceTest {
         when(userClient.getUserByEmail(EMAIL)).thenReturn(user(true));
         when(accessChecker.isAdminOrOwner(USER_ID)).thenReturn(false);
 
-        assertThatThrownBy(() -> orderService.create(new CreateOrderRequest(EMAIL, List.of(new OrderItemRequest(1L, 1)))))
+        CreateOrderRequest request = new CreateOrderRequest(EMAIL, List.of(new OrderItemRequest(1L, 1)));
+
+        assertThatThrownBy(() -> orderService.create(request))
                 .isInstanceOf(AccessDeniedException.class);
         verify(orderRepository, never()).save(any());
     }
@@ -139,7 +143,9 @@ class OrderServiceTest {
         when(userClient.getUserByEmail(EMAIL)).thenReturn(user(false));
         when(accessChecker.isAdminOrOwner(USER_ID)).thenReturn(true);
 
-        assertThatThrownBy(() -> orderService.create(new CreateOrderRequest(EMAIL, List.of(new OrderItemRequest(1L, 1)))))
+        CreateOrderRequest request = new CreateOrderRequest(EMAIL, List.of(new OrderItemRequest(1L, 1)));
+
+        assertThatThrownBy(() -> orderService.create(request))
                 .isInstanceOf(InvalidRequestException.class)
                 .hasMessageContaining("deactivated");
         verify(orderRepository, never()).save(any());
@@ -149,7 +155,9 @@ class OrderServiceTest {
     void create_whenUserMissing_propagatesNotFound() {
         when(userClient.getUserByEmail(EMAIL)).thenThrow(new UserNotFoundException("User with email " + EMAIL + " not found"));
 
-        assertThatThrownBy(() -> orderService.create(new CreateOrderRequest(EMAIL, List.of(new OrderItemRequest(1L, 1)))))
+        CreateOrderRequest request = new CreateOrderRequest(EMAIL, List.of(new OrderItemRequest(1L, 1)));
+
+        assertThatThrownBy(() -> orderService.create(request))
                 .isInstanceOf(UserNotFoundException.class);
         verifyNoInteractions(orderRepository);
     }
@@ -158,7 +166,9 @@ class OrderServiceTest {
     void create_whenUserServiceUnavailable_propagatesError() {
         when(userClient.getUserByEmail(EMAIL)).thenThrow(new UserServiceUnavailableException("down"));
 
-        assertThatThrownBy(() -> orderService.create(new CreateOrderRequest(EMAIL, List.of(new OrderItemRequest(1L, 1)))))
+        CreateOrderRequest request = new CreateOrderRequest(EMAIL, List.of(new OrderItemRequest(1L, 1)));
+
+        assertThatThrownBy(() -> orderService.create(request))
                 .isInstanceOf(UserServiceUnavailableException.class);
         verifyNoInteractions(orderRepository);
     }
@@ -217,7 +227,9 @@ class OrderServiceTest {
         OrderFilter filter = new OrderFilter(Instant.parse("2026-02-01T00:00:00Z"),
                 Instant.parse("2026-01-01T00:00:00Z"), null);
 
-        assertThatThrownBy(() -> orderService.getAll(filter, PageRequest.of(0, 10)))
+        Pageable pageable = PageRequest.of(0, 10);
+
+        assertThatThrownBy(() -> orderService.getAll(filter, pageable))
                 .isInstanceOf(InvalidRequestException.class);
         verifyNoInteractions(orderRepository);
     }
@@ -272,7 +284,9 @@ class OrderServiceTest {
     void update_whenNotNew_throwsNotEditable() {
         when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.SHIPPED)));
 
-        assertThatThrownBy(() -> orderService.update(ORDER_ID, new UpdateOrderRequest(List.of(new OrderItemRequest(1L, 1)))))
+        UpdateOrderRequest request = new UpdateOrderRequest(List.of(new OrderItemRequest(1L, 1)));
+
+        assertThatThrownBy(() -> orderService.update(ORDER_ID, request))
                 .isInstanceOf(OrderNotEditableException.class)
                 .hasMessageContaining("SHIPPED");
         verify(orderRepository, never()).saveAndFlush(any());
@@ -282,7 +296,9 @@ class OrderServiceTest {
     void update_whenMissing_throwsNotFound() {
         when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> orderService.update(ORDER_ID, new UpdateOrderRequest(List.of(new OrderItemRequest(1L, 1)))))
+        UpdateOrderRequest request = new UpdateOrderRequest(List.of(new OrderItemRequest(1L, 1)));
+
+        assertThatThrownBy(() -> orderService.update(ORDER_ID, request))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
