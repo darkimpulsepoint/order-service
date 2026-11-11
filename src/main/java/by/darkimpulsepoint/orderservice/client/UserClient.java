@@ -34,9 +34,9 @@ public class UserClient {
                     .uri(USERS + "/by-email?email={email}", email)
                     .retrieve()
                     .body(UserInfo.class);
-        } catch (HttpClientErrorException.NotFound ex) {
+        } catch (HttpClientErrorException.NotFound _) {
             throw new UserNotFoundException("User with email " + email + " not found");
-        } catch (HttpClientErrorException.Forbidden ex) {
+        } catch (HttpClientErrorException.Forbidden _) {
             throw new AccessDeniedException("Orders can be created only for yourself");
         }
     }
@@ -58,7 +58,7 @@ public class UserClient {
         if (ex instanceof UserNotFoundException || ex instanceof AccessDeniedException) {
             throw (RuntimeException) ex;
         }
-        log.warn("user-service is unavailable, cannot find user by email: {}", ex.toString());
+        log.warn("user-service is unavailable, cannot find user by email {}: {}", email, ex.toString());
         throw new UserServiceUnavailableException("User service is unavailable, try again later", ex);
     }
 
